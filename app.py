@@ -1,11 +1,11 @@
 import sqlite3
 
-from flask import Flask, render_template, request, redirect, url_for
-from werkzeug.security import generate_password_hash
+from flask import Flask, render_template, request, redirect, url_for, flash, abort
 
-from database.db import init_db, get_db
+from database.db import init_db, create_user
 
 app = Flask(__name__)
+app.secret_key = "dev-secret-key"
 
 
 # ------------------------------------------------------------------ #
@@ -22,29 +22,29 @@ def register():
     if request.method == "GET":
         return render_template("register.html")
 
+    if request.method != "POST":
+        abort(405)
+
     name = request.form.get("name", "").strip()
     email = request.form.get("email", "").strip()
     password = request.form.get("password", "")
+    confirm_password = request.form.get("confirm_password", "")
 
-    if not name or not email or not password:
-        return render_template("register.html", error="All fields are required.", name=name, email=email)
+    if not name or not email or not password or not confirm_password:
+        flash("All fields are required.")
+        return render_template("register.html", name=name, email=email)
 
-    if len(password) < 8:
-        return render_template("register.html", error="Password must be at least 8 characters.", name=name, email=email)
-
-    password_hash = generate_password_hash(password)
+    if password != confirm_password:
+        flash("Passwords do not match.")
+        return render_template("register.html", name=name, email=email)
 
     try:
-        conn = get_db()
-        conn.execute(
-            "INSERT INTO users (name, email, password) VALUES (?, ?, ?)",
-            (name, email, password_hash),
-        )
-        conn.commit()
-        conn.close()
+        create_user(name, email, password)
     except sqlite3.IntegrityError:
-        return render_template("register.html", error="An account with this email already exists.", name=name, email=email)
+        flash("Email already registered.")
+        return render_template("register.html", name=name, email=email)
 
+    flash("Account created! Please sign in.")
     return redirect(url_for("login"))
 
 
