@@ -1,7 +1,7 @@
 import sqlite3
 import os
 
-from werkzeug.security import generate_password_hash
+from werkzeug.security import generate_password_hash, check_password_hash
 
 DB_PATH = os.path.join(os.path.dirname(__file__), '..', 'expense_tracker.db')
 
@@ -49,6 +49,13 @@ def create_user(name, email, password):
     user_id = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
     conn.close()
     return user_id
+
+
+def get_user_by_email(email):
+    conn = get_db()
+    user = conn.execute("SELECT * FROM users WHERE email = ?", (email,)).fetchone()
+    conn.close()
+    return user
 
 
 def seed_db():
