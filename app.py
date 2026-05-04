@@ -21,7 +21,7 @@ def landing():
 @app.route("/register", methods=["GET", "POST"])
 def register():
     if session.get("user_id"):
-        return redirect(url_for("landing"))
+        return redirect(url_for("profile"))
 
     if request.method == "GET":
         return render_template("register.html")
@@ -55,7 +55,7 @@ def register():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if session.get("user_id"):
-        return redirect(url_for("landing"))
+        return redirect(url_for("profile"))
 
     if request.method == "GET":
         return render_template("login.html")
@@ -74,7 +74,7 @@ def login():
 
     session["user_id"] = user["id"]
     session["user_name"] = user["name"]
-    return redirect(url_for("landing"))
+    return redirect(url_for("profile"))
 
 
 @app.route("/terms")
@@ -99,7 +99,37 @@ def logout():
 
 @app.route("/profile")
 def profile():
-    return "Profile page — coming in Step 4"
+    if not session.get("user_id"):
+        return redirect(url_for("login"))
+
+    user = {
+        "name": "Ananya Sharma",
+        "email": "ananya@example.com",
+        "member_since": "January 2024",
+        "initials": "AS",
+    }
+    stats = {
+        "total_spent": "₹12,450",
+        "transaction_count": 24,
+        "top_category": "Food",
+    }
+    transactions = [
+        {"date": "2 May 2026",  "description": "Swiggy Order",     "category": "Food",     "amount": "₹340"},
+        {"date": "30 Apr 2026", "description": "Ola Cab",          "category": "Travel",   "amount": "₹220"},
+        {"date": "28 Apr 2026", "description": "Electricity Bill", "category": "Bills",    "amount": "₹1,800"},
+        {"date": "25 Apr 2026", "description": "Zomato Order",     "category": "Food",     "amount": "₹280"},
+        {"date": "22 Apr 2026", "description": "Amazon Purchase",  "category": "Shopping", "amount": "₹1,200"},
+    ]
+    categories = [
+        {"name": "Food",     "total": "₹4,200", "slug": "food"},
+        {"name": "Bills",    "total": "₹3,600", "slug": "bills"},
+        {"name": "Shopping", "total": "₹2,550", "slug": "shopping"},
+        {"name": "Travel",   "total": "₹2,100", "slug": "travel"},
+    ]
+    return render_template(
+        "profile.html",
+        user=user, stats=stats, transactions=transactions, categories=categories,
+    )
 
 
 @app.route("/expenses/add")
